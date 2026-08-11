@@ -340,15 +340,26 @@ export const AccountView = () => {
 
                   {/* Scrollable Container with Max Height */}
                   <div className="max-h-64 overflow-y-auto pr-1 space-y-2 no-scrollbar">
-                    {usersList
-                      .filter(u => {
+                    {(() => {
+                      const filteredList = usersList.filter(u => {
                         const q = userSearchQuery.toLowerCase();
                         const matchQ = u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
                         if (userFilterTab === 'Menunggu') return matchQ && u.status === 'pending';
                         if (userFilterTab === 'Disetujui') return matchQ && u.status === 'approved';
                         return matchQ;
-                      })
-                      .map((uItem) => (
+                      });
+
+                      if (filteredList.length === 0) {
+                        return (
+                          <div className="text-center py-4 bg-slate-800/40 rounded-xl border border-slate-800">
+                            <p className="text-xs text-slate-400 font-medium">
+                              {userFilterTab === 'Menunggu' ? 'Tidak ada pendaftaran user yang menunggu persetujuan.' : 'Belum ada user yang disetujui.'}
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return filteredList.map((uItem) => (
                         <div key={uItem.id} className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-3 hover:border-slate-600 transition-colors">
                           <div className="space-y-0.5 min-w-0 flex-1">
                             <div className="flex items-center gap-2">
@@ -401,10 +412,8 @@ export const AccountView = () => {
                             </div>
                           )}
                         </div>
-                      ))}
-                    {usersList.length === 0 && (
-                      <p className="text-center text-xs text-slate-400 py-3">Belum ada user yang terdaftar.</p>
-                    )}
+                      ));
+                    })()}
                   </div>
                 </div>
               )}

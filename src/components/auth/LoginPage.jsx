@@ -35,7 +35,7 @@ export const LoginPage = () => {
       const targetUser = usersList.find(u => u.username === form.username);
       if (targetUser) {
         if (targetUser.status === 'pending') {
-          setErrorMsg('Akun Anda masih menunggu persetujuan Admin ilprad untuk login!');
+          setErrorMsg('Akun Anda masih menunggu persetujuan Admin untuk login!');
         } else if (targetUser.status === 'approved') {
           loginUser(targetUser.email, targetUser.username);
         } else {
@@ -57,7 +57,7 @@ export const LoginPage = () => {
     
     // Tambah ke daftar pendaftar yang butuh persetujuan admin
     registerNewUser(regForm.username);
-    alert(`Pendaftaran ${regForm.username} berhasil!\nAkun Anda memerlukan persetujuan Admin (ilprad) sebelum dapat login.`);
+    alert(`Pendaftaran ${regForm.username} berhasil!\nAkun Anda memerlukan persetujuan Admin sebelum dapat login.`);
     setIsRegisterOpen(false);
   };
 
