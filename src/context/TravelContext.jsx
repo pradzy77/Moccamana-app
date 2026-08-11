@@ -70,17 +70,23 @@ export const TravelProvider = ({ children }) => {
       if (data) {
         let parsedList = [];
         if (typeof data === 'object') {
-          parsedList = Object.entries(data).map(([key, val]) => ({ ...val, _fbKey: key }));
+          parsedList = Object.entries(data).map(([key, val]) => {
+            if (typeof val === 'object' && val !== null) {
+              return { ...val, _fbKey: key };
+            }
+            return null;
+          }).filter(Boolean);
         } else if (Array.isArray(data)) {
-          parsedList = data;
+          parsedList = data.filter(Boolean);
         }
-        if (parsedList.length > 0) {
-          const hasAdmin = parsedList.some(u => u.username === 'ilprad');
-          if (!hasAdmin) {
-            parsedList.unshift({ id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' });
-          }
-          setUsersList(parsedList);
+        
+        // Pastikan admin ilprad selalu ada di daftar
+        const hasAdmin = parsedList.some(u => u.username === 'ilprad');
+        if (!hasAdmin) {
+          parsedList.unshift({ id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' });
         }
+
+        setUsersList(parsedList);
       }
     });
 
