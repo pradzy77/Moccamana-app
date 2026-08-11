@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+}
+
+/* ============================================================
+   LIGHT MODE: Moccamana warm sandy/mocha tones
+   Applied via body class when darkMode = false
+   ============================================================ */
+
+body:not(.dark-mode) {
+  background-color: #faf8f5 !important;
+  color: #2c1a0e !important;
+}
+
+/* === Backgrounds === */
+body:not(.dark-mode) .bg-slate-950 { background-color: #faf8f5 !important; }
+body:not(.dark-mode) .bg-slate-900 { background-color: #ffffff !important; }
+body:not(.dark-mode) .bg-slate-800 { background-color: #f0e9de !important; }
+body:not(.dark-mode) .bg-slate-700 { background-color: #e5d9cc !important; }
+
+body:not(.dark-mode) [class*="bg-slate-950\/"] { background-color: rgba(250,248,245,0.95) !important; }
+body:not(.dark-mode) [class*="bg-slate-900\/"] { background-color: rgba(255,255,255,0.92) !important; }
+body:not(.dark-mode) [class*="bg-slate-800\/"] { background-color: rgba(240,233,222,0.9) !important; }
+
+/* === Gradients: only override NON-absolute elements (banners, not photo overlays) === */
+body:not(.dark-mode) [class*="bg-gradient-to-r"]:not(.absolute),
+body:not(.dark-mode) [class*="bg-gradient-to-b"]:not(.absolute),
+body:not(.dark-mode) [class*="bg-gradient-to-br"]:not(.absolute),
+body:not(.dark-mode) [class*="bg-gradient-to-tr"]:not(.absolute) {
+  background: linear-gradient(135deg, #f5ede2, #ecddd0) !important;
+}
+
+/* EXPLICITLY preserve photo overlays (absolute inset-0 gradient over images) */
+body:not(.dark-mode) .absolute.inset-0[class*="bg-gradient-to-t"],
+body:not(.dark-mode) .absolute[class*="from-slate-950"][class*="to-transparent"] {
+  background: linear-gradient(to top, rgba(250,248,245,0.85) 0%, rgba(250,248,245,0.3) 50%, transparent 100%) !important;
+}
+
+/* === Borders === */
+body:not(.dark-mode) .border-slate-800 { border-color: #e5d9cc !important; }
+body:not(.dark-mode) .border-slate-700 { border-color: #ddd0c0 !important; }
+body:not(.dark-mode) [class*="border-slate-8"] { border-color: #e5d9cc !important; }
+body:not(.dark-mode) [class*="border-slate-7"] { border-color: #ddd0c0 !important; }
+body:not(.dark-mode) [class*="border-cyan-"] { border-color: rgba(155,110,68,0.3) !important; }
+body:not(.dark-mode) [class*="border-blue-5"] { border-color: rgba(155,110,68,0.3) !important; }
+
+/* === Text === */
+body:not(.dark-mode) .text-white { color: #2c1a0e !important; }
+body:not(.dark-mode) .text-slate-100 { color: #2c1a0e !important; }
+body:not(.dark-mode) .text-slate-200 { color: #4a3322 !important; }
+body:not(.dark-mode) .text-slate-300 { color: #6b4c33 !important; }
+body:not(.dark-mode) .text-slate-400 { color: #9a7a60 !important; }
+body:not(.dark-mode) .text-slate-500 { color: #b09070 !important; }
+body:not(.dark-mode) .text-slate-600 { color: #c0a888 !important; }
+
+/* === Accent: cyan → warm mocha === */
+body:not(.dark-mode) [class*="text-cyan-"] { color: #9b6e44 !important; }
+body:not(.dark-mode) .bg-cyan-500 { background-color: #9b6e44 !important; }
+body:not(.dark-mode) .bg-cyan-500 * { color: #ffffff !important; }
+body:not(.dark-mode) .hover\:bg-cyan-400:hover { background-color: #b07a50 !important; }
+body:not(.dark-mode) [class*="bg-cyan-950"] { background-color: rgba(155,110,68,0.12) !important; }
+body:not(.dark-mode) [class*="bg-cyan-500\/"] { background-color: rgba(155,110,68,0.12) !important; }
+
+/* === Emerald === */
+body:not(.dark-mode) .text-emerald-400 { color: #4a7c59 !important; }
+body:not(.dark-mode) .text-emerald-300 { color: #5a9469 !important; }
+body:not(.dark-mode) .bg-emerald-600 { background-color: #4a7c59 !important; }
+body:not(.dark-mode) .hover\:bg-emerald-500:hover { background-color: #5a9469 !important; }
+body:not(.dark-mode) [class*="bg-emerald-950"] { background-color: rgba(74,124,89,0.1) !important; }
+body:not(.dark-mode) [class*="border-emerald-"] { border-color: rgba(74,124,89,0.3) !important; }
+
+/* === Amber === */
+body:not(.dark-mode) .text-amber-400 { color: #a07028 !important; }
+body:not(.dark-mode) .text-amber-300 { color: #b08038 !important; }
+body:not(.dark-mode) .bg-amber-500 { background-color: #c8942a !important; }
+body:not(.dark-mode) [class*="bg-amber-950"] { background-color: rgba(160,112,40,0.1) !important; }
+body:not(.dark-mode) [class*="border-amber-"] { border-color: rgba(160,112,40,0.3) !important; }
+
+/* === Blue === */
+body:not(.dark-mode) .text-blue-400 { color: #3a6b9e !important; }
+body:not(.dark-mode) .text-blue-300 { color: #4a80b8 !important; }
+body:not(.dark-mode) .bg-blue-600 { background-color: #3a6b9e !important; }
+body:not(.dark-mode) [class*="bg-blue-950"] { background-color: rgba(58,107,158,0.1) !important; }
+
+/* === Rose / Red === */
+body:not(.dark-mode) .text-rose-400 { color: #9b3a3a !important; }
+body:not(.dark-mode) .text-red-400 { color: #9b3a3a !important; }
+body:not(.dark-mode) .text-red-300 { color: #b04040 !important; }
+body:not(.dark-mode) .bg-rose-600 { background-color: #9b3a3a !important; }
+body:not(.dark-mode) [class*="bg-red-950"] { background-color: rgba(155,58,58,0.1) !important; }
+body:not(.dark-mode) [class*="bg-rose-950"] { background-color: rgba(155,58,58,0.1) !important; }
+body:not(.dark-mode) [class*="border-red-"] { border-color: rgba(155,58,58,0.25) !important; }
+body:not(.dark-mode) [class*="border-rose-"] { border-color: rgba(155,58,58,0.25) !important; }
+
+/* === Indigo (dresscode badges) === */
+body:not(.dark-mode) [class*="bg-indigo-"] { background-color: #e8ddd0 !important; color: #4a3322 !important; }
+
+/* === Input, select, textarea === */
+body:not(.dark-mode) input,
+body:not(.dark-mode) select,
+body:not(.dark-mode) textarea {
+  background-color: #f5ede3 !important;
+  border-color: #ddd0c0 !important;
+  color: #2c1a0e !important;
+}
+body:not(.dark-mode) input::placeholder,
+body:not(.dark-mode) textarea::placeholder { color: #b09070 !important; }
+body:not(.dark-mode) input:focus,
+body:not(.dark-mode) select:focus,
+body:not(.dark-mode) textarea:focus {
+  border-color: #9b6e44 !important;
+  outline: none;
+}
+
+/* === Modal overlay === */
+body:not(.dark-mode) .fixed.inset-0 { background-color: rgba(30,15,5,0.55) !important; }
+
+/* === Header & Nav === */
+body:not(.dark-mode) header {
+  background: rgba(255, 252, 247, 0.96) !important;
+  border-bottom-color: #e5d9cc !important;
+}
+body:not(.dark-mode) nav {
+  background: rgba(255, 252, 247, 0.96) !important;
+  border-top-color: #e5d9cc !important;
+}
+
+/* === Hover states === */
+body:not(.dark-mode) .hover\:border-cyan-500\/40:hover { border-color: rgba(155,110,68,0.4) !important; }
+body:not(.dark-mode) .hover\:border-cyan-500\/50:hover { border-color: rgba(155,110,68,0.5) !important; }
+body:not(.dark-mode) .hover\:bg-slate-800:hover { background-color: #ecddd0 !important; }
+body:not(.dark-mode) [class*="hover:bg-slate-"]:hover { background-color: #ecddd0 !important; }
+
+/* === Leaflet popup light mode === */
+body:not(.dark-mode) .leaflet-popup-content-wrapper {
+  background: rgba(255, 252, 247, 0.97) !important;
+  color: #2c1a0e !important;
+  border-color: rgba(155, 110, 68, 0.3) !important;
+}
+body:not(.dark-mode) .leaflet-popup-tip { background: rgba(255, 252, 247, 0.97) !important; }
+
+/* ============================================================
+   SHARED UTILITIES
+   ============================================================ */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  z-index: 10;
+}
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem !important;
+  backdrop-filter: blur(12px);
+}
+.leaflet-popup-tip { background: rgba(15, 23, 42, 0.95) !important; }
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(14, 165, 233, 0.8); }
+}
+.pulse-glow { animation: pulseGlow 2.5s infinite ease-in-out; }
+
+*, *::before, *::after {
+  transition: background-color 0.25s ease, border-color 0.2s ease, color 0.15s ease;
+}
