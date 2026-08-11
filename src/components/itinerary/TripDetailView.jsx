@@ -691,22 +691,18 @@ export const TripDetailView = () => {
                   <div>
                     <label className="block text-[10px] text-slate-400 mb-0.5">Latitude</label>
                     <input
-                      type="number"
-                      step="any"
-                      required
-                      value={actForm.lat}
-                      onChange={(e) => setActForm({ ...actForm, lat: parseFloat(e.target.value) || 0 })}
+                      type="text"
+                      value={actForm.lat ?? -8.6212}
+                      onChange={(e) => setActForm({ ...actForm, lat: e.target.value })}
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 font-mono"
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] text-slate-400 mb-0.5">Longitude</label>
                     <input
-                      type="number"
-                      step="any"
-                      required
-                      value={actForm.lng}
-                      onChange={(e) => setActForm({ ...actForm, lng: parseFloat(e.target.value) || 0 })}
+                      type="text"
+                      value={actForm.lng ?? 115.0868}
+                      onChange={(e) => setActForm({ ...actForm, lng: e.target.value })}
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-cyan-300 font-mono"
                     />
                   </div>
