@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initialTrips, initialSpots, initialUser, initialSettings, travelTips } from '../mockData/initialData';
+import { rtdb } from '../services/firebase';
+import { ref, onValue, set } from 'firebase/database';
 
 const TravelContext = createContext();
 
@@ -42,6 +44,70 @@ export const TravelProvider = ({ children }) => {
     };
     return { ...loadedUser, role: 'admin', isLoggedIn: false }; // Paksa login page aktif saat start
   });
+
+  // Realtime Firebase Synchronization
+  useEffect(() => {
+    // 1. Sync Trips from Firebase
+    const tripsRef = ref(rtdb, 'moccamana_trips');
+    const unsubTrips = onValue(tripsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setTrips(data);
+      }
+    });
+
+    // 2. Sync UsersList from Firebase
+    const usersRef = ref(rtdb, 'moccamana_users');
+    const unsubUsers = onValue(usersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setUsersList(data);
+      }
+    });
+
+    // 3. Sync Spots from Firebase
+    const spotsRef = ref(rtdb, 'moccamana_spots');
+    const unsubSpots = onValue(spotsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setSpots(data);
+      }
+    });
+
+    return () => {
+      unsubTrips();
+      unsubUsers();
+      unsubSpots();
+    };
+  }, []);
+
+  // Write changes to Firebase & LocalStorage
+  useEffect(() => {
+    localStorage.setItem('jelajah_trips', JSON.stringify(trips));
+    try {
+      set(ref(rtdb, 'moccamana_trips'), trips);
+    } catch (e) {
+      console.error('Firebase sync error:', e);
+    }
+  }, [trips]);
+
+  useEffect(() => {
+    localStorage.setItem('moccamana_users_list', JSON.stringify(usersList));
+    try {
+      set(ref(rtdb, 'moccamana_users'), usersList);
+    } catch (e) {
+      console.error('Firebase sync error:', e);
+    }
+  }, [usersList]);
+
+  useEffect(() => {
+    localStorage.setItem('jelajah_spots', JSON.stringify(spots));
+    try {
+      set(ref(rtdb, 'moccamana_spots'), spots);
+    } catch (e) {
+      console.error('Firebase sync error:', e);
+    }
+  }, [spots]);
 
   // Settings State
   const [settings, setSettings] = useState(() => {
