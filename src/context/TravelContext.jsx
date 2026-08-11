@@ -7,7 +7,7 @@ const TravelContext = createContext();
 
 export const TravelProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('trips'); // 'trips' | 'wishlist' | 'map' | 'dresscode' | 'account' | 'report'
-  const [selectedTripId, setSelectedTripId] = useState('trip-1');
+  const [selectedTripId, setSelectedTripId] = useState(null);
   const [tripViewMode, setTripViewMode] = useState('list'); // 'list' | 'detail'
 
   // Trips State
@@ -161,7 +161,7 @@ export const TravelProvider = ({ children }) => {
   }, [usersList]);
 
   // Selected Trip
-  const selectedTrip = trips.find(t => t.id === selectedTripId) || trips[0] || null;
+  const selectedTrip = selectedTripId ? (trips.find(t => t.id === selectedTripId) || null) : null;
 
   // Trip Actions
   const addTrip = (newTripData) => {
