@@ -7,7 +7,7 @@ export const AccountView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isUsersPanelOpen, setIsUsersPanelOpen] = useState(true);
-  const [userFilterTab, setUserFilterTab] = useState('Menunggu'); // 'Menunggu' | 'Disetujui'
+  const [userFilterTab, setUserFilterTab] = useState('Semua'); // 'Semua' | 'Menunggu' | 'Disetujui'
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [editForm, setEditForm] = useState({
     name: user.name,
@@ -322,11 +322,11 @@ export const AccountView = () => {
                       className="w-full sm:w-48 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-400 outline-none focus:border-amber-400"
                     />
                     <div className="flex bg-slate-800 p-0.5 rounded-xl border border-slate-700 w-full sm:w-auto">
-                      {['Menunggu', 'Disetujui'].map(tab => (
+                      {['Semua', 'Menunggu', 'Disetujui'].map(tab => (
                         <button
                           key={tab}
                           onClick={() => setUserFilterTab(tab)}
-                          className={`flex-1 sm:flex-initial px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                          className={`flex-1 sm:flex-initial px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
                             userFilterTab === tab
                               ? 'bg-amber-500 text-slate-950 shadow-sm'
                               : 'text-slate-400 hover:text-white'
