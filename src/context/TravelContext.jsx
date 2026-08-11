@@ -61,7 +61,15 @@ export const TravelProvider = ({ children }) => {
     const unsubUsers = onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        setUsersList(data);
+        let parsedList = [];
+        if (typeof data === 'object') {
+          parsedList = Object.values(data);
+        } else if (Array.isArray(data)) {
+          parsedList = data;
+        }
+        if (parsedList.length > 0) {
+          setUsersList(parsedList);
+        }
       }
     });
 
@@ -518,8 +526,9 @@ export const TravelProvider = ({ children }) => {
   };
 
   const registerNewUser = (username) => {
+    const userId = `u-${Date.now()}`;
     const newUser = {
-      id: `u-${Date.now()}`,
+      id: userId,
       username: username,
       email: `${username}@moccamana.app`,
       role: 'user',
@@ -527,33 +536,34 @@ export const TravelProvider = ({ children }) => {
       registeredAt: 'Baru saja'
     };
     
-    setUsersList(prevList => {
-      const updatedList = [newUser, ...prevList];
-      // Tulis langsung ke Firebase Realtime Database
-      try {
-        set(ref(rtdb, 'moccamana_users'), updatedList);
-      } catch (err) {
-        console.error('Firebase user sync error:', err);
-      }
-      return updatedList;
-    });
+    // 1. Update State Lokal
+    setUsersList(prevList => [newUser, ...prevList]);
+
+    // 2. Direct write per-user node to Firebase Realtime Database
+    try {
+      set(ref(rtdb, `moccamana_users/${userId}`), newUser);
+    } catch (err) {
+      console.error('Firebase register error:', err);
+    }
   };
 
   const approveUser = (userId) => {
-    const updated = usersList.map(u => u.id === userId ? { ...u, status: 'approved' } : u);
-    setUsersList(updated);
+    const targetUser = usersList.find(u => u.id === userId);
+    if (!targetUser) return;
+    const updatedUser = { ...targetUser, status: 'approved' };
+
+    setUsersList(usersList.map(u => u.id === userId ? updatedUser : u));
     try {
-      set(ref(rtdb, 'moccamana_users'), updated);
+      set(ref(rtdb, `moccamana_users/${userId}`), updatedUser);
     } catch (err) {
       console.error('Firebase approve error:', err);
     }
   };
 
   const rejectUser = (userId) => {
-    const updated = usersList.filter(u => u.id !== userId);
-    setUsersList(updated);
+    setUsersList(usersList.filter(u => u.id !== userId));
     try {
-      set(ref(rtdb, 'moccamana_users'), updated);
+      set(ref(rtdb, `moccamana_users/${userId}`), null); // Hapus dari Firebase
     } catch (err) {
       console.error('Firebase reject error:', err);
     }
