@@ -207,16 +207,23 @@ export const TripDetailView = () => {
 
   const handleSubmitActivity = (e) => {
     e.preventDefault();
-    if (!actForm.title) return;
+    if (!actForm.title || !actForm.title.trim()) return;
+
+    const safeLat = isNaN(Number(actForm.lat)) ? -8.6212 : Number(actForm.lat);
+    const safeLng = isNaN(Number(actForm.lng)) ? 115.0868 : Number(actForm.lng);
 
     if (editingActivityId) {
       updateActivityInTrip(selectedTrip.id, editingActivityId, {
         ...actForm,
+        lat: safeLat,
+        lng: safeLng,
         day: selectedDayTab
       });
     } else {
       addActivityToTrip(selectedTrip.id, {
         ...actForm,
+        lat: safeLat,
+        lng: safeLng,
         day: selectedDayTab,
         category: 'Destinasi',
         notes: ''

@@ -43,15 +43,13 @@ export const TravelProvider = ({ children }) => {
   useEffect(() => {
     const currentUsername = user?.name || 'ilprad';
 
-    // 1. Sync User-Specific Trips from Firebase
+    // 1. Sync User-Specific Trips & Shared Collaborated Trips from Firebase
     const userTripsRef = ref(rtdb, `moccamana_user_trips/${currentUsername}`);
     const unsubTrips = onValue(userTripsRef, (snapshot) => {
       const data = snapshot.val();
       if (Array.isArray(data)) {
         setTrips(data);
       } else if (data === null) {
-        // Cek apakah user pernah punya data di cloud sebelumnya
-        // Jika benar-benar baru pertama kali, berikan default trip sekali saja
         const hasInitialized = localStorage.getItem(`jelajah_init_${currentUsername}`);
         if (!hasInitialized) {
           const defaultUserTrips = initialTrips.map(t => ({
@@ -67,6 +65,31 @@ export const TravelProvider = ({ children }) => {
         } else {
           setTrips([]);
         }
+      }
+    });
+
+    // 1b. Listen to shared collaborated trips in Realtime
+    const allTripsRef = ref(rtdb, 'moccamana_user_trips');
+    const unsubAllTrips = onValue(allTripsRef, (snapshot) => {
+      const allData = snapshot.val();
+      if (allData && typeof allData === 'object') {
+        setTrips(prevTrips => {
+          let hasChanges = false;
+          const newTrips = prevTrips.map(localTrip => {
+            if (localTrip.owner && localTrip.owner !== currentUsername) {
+              const ownerTrips = allData[localTrip.owner];
+              if (Array.isArray(ownerTrips)) {
+                const liveTrip = ownerTrips.find(t => t.id === localTrip.id || t.shareCode === localTrip.shareCode);
+                if (liveTrip && JSON.stringify(liveTrip) !== JSON.stringify(localTrip)) {
+                  hasChanges = true;
+                  return liveTrip;
+                }
+              }
+            }
+            return localTrip;
+          });
+          return hasChanges ? newTrips : prevTrips;
+        });
       }
     });
 
@@ -119,6 +142,21 @@ export const TravelProvider = ({ children }) => {
     localStorage.setItem(`jelajah_trips_${currentUsername}`, JSON.stringify(trips));
     try {
       set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), trips);
+
+      // Jika ada shared trip yang diedit oleh collaborator, update juga di node owner asli secara Realtime
+      trips.forEach(t => {
+        if (t.owner && t.owner !== currentUsername) {
+          onValue(ref(rtdb, `moccamana_user_trips/${t.owner}`), (snapshot) => {
+            const ownerTrips = snapshot.val();
+            if (Array.isArray(ownerTrips)) {
+              const updatedOwnerTrips = ownerTrips.map(ot => (ot.id === t.id || ot.shareCode === t.shareCode) ? t : ot);
+              if (JSON.stringify(ownerTrips) !== JSON.stringify(updatedOwnerTrips)) {
+                set(ref(rtdb, `moccamana_user_trips/${t.owner}`), updatedOwnerTrips);
+              }
+            }
+          }, { onlyOnce: true });
+        }
+      });
     } catch (e) {
       console.error('Firebase trip sync error:', e);
     }
