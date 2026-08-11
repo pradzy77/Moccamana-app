@@ -22,14 +22,10 @@ export const TravelProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : initialSpots;
   });
 
-  // Registered & Pending Users State (for Admin Approval)
-  const [usersList, setUsersList] = useState(() => {
-    const saved = localStorage.getItem('moccamana_users_list');
-    return saved ? JSON.parse(saved) : [
-      { id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' },
-      { id: 'u-2', username: 'carrjies', email: 'carrjies@moccamana.app', role: 'user', status: 'pending', registeredAt: 'Hari ini, 22:45 WIB' }
-    ];
-  });
+  // Registered & Pending Users State (Purely Live Cloud Synchronized)
+  const [usersList, setUsersList] = useState([
+    { id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' }
+  ]);
 
   // User State
   const [user, setUser] = useState(() => {
@@ -75,7 +71,6 @@ export const TravelProvider = ({ children }) => {
             parsedList.unshift({ id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' });
           }
           setUsersList(parsedList);
-          localStorage.setItem('moccamana_users_list', JSON.stringify(parsedList));
         }
       }
     });
