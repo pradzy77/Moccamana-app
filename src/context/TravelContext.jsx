@@ -47,19 +47,26 @@ export const TravelProvider = ({ children }) => {
     const userTripsRef = ref(rtdb, `moccamana_user_trips/${currentUsername}`);
     const unsubTrips = onValue(userTripsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setTrips(data);
-      } else if (!data) {
-        // Jika user baru belum punya trip, berikan initial default trip terpisah
-        const defaultUserTrips = initialTrips.map(t => ({
-          ...t,
-          id: `${t.id}-${currentUsername}`,
-          owner: currentUsername
-        }));
-        setTrips(defaultUserTrips);
-        try {
-          set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), defaultUserTrips);
-        } catch (e) {}
+      } else if (data === null) {
+        // Cek apakah user pernah punya data di cloud sebelumnya
+        // Jika benar-benar baru pertama kali, berikan default trip sekali saja
+        const hasInitialized = localStorage.getItem(`jelajah_init_${currentUsername}`);
+        if (!hasInitialized) {
+          const defaultUserTrips = initialTrips.map(t => ({
+            ...t,
+            id: `${t.id}-${currentUsername}`,
+            owner: currentUsername
+          }));
+          setTrips(defaultUserTrips);
+          localStorage.setItem(`jelajah_init_${currentUsername}`, 'true');
+          try {
+            set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), defaultUserTrips);
+          } catch (e) {}
+        } else {
+          setTrips([]);
+        }
       }
     });
 
