@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { initialTrips, initialSpots, initialUser, initialSettings, travelTips } from '../mockData/initialData';
 import { rtdb } from '../services/firebase';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, set, push, remove } from 'firebase/database';
 
 const TravelContext = createContext();
 
@@ -57,19 +57,25 @@ export const TravelProvider = ({ children }) => {
       }
     });
 
-    // 2. Sync UsersList from Firebase
+    // 2. Sync UsersList from Firebase (Realtime for ALL devices)
     const usersRef = ref(rtdb, 'moccamana_users');
     const unsubUsers = onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         let parsedList = [];
         if (typeof data === 'object') {
-          parsedList = Object.values(data);
+          parsedList = Object.entries(data).map(([key, val]) => ({ ...val, _fbKey: key }));
         } else if (Array.isArray(data)) {
           parsedList = data;
         }
         if (parsedList.length > 0) {
+          // Pastikan admin ilprad selalu ada
+          const hasAdmin = parsedList.some(u => u.username === 'ilprad');
+          if (!hasAdmin) {
+            parsedList.unshift({ id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' });
+          }
           setUsersList(parsedList);
+          localStorage.setItem('moccamana_users_list', JSON.stringify(parsedList));
         }
       }
     });
@@ -99,15 +105,6 @@ export const TravelProvider = ({ children }) => {
       console.error('Firebase sync error:', e);
     }
   }, [trips]);
-
-  useEffect(() => {
-    localStorage.setItem('moccamana_users_list', JSON.stringify(usersList));
-    try {
-      set(ref(rtdb, 'moccamana_users'), usersList);
-    } catch (e) {
-      console.error('Firebase sync error:', e);
-    }
-  }, [usersList]);
 
   useEffect(() => {
     localStorage.setItem('jelajah_spots', JSON.stringify(spots));
@@ -538,15 +535,15 @@ export const TravelProvider = ({ children }) => {
     };
     
     // 1. Update State Lokal
-    const updatedList = [newUser, ...usersList.filter(u => u.id !== userId)];
-    setUsersList(updatedList);
+    setUsersList(prevList => [newUser, ...prevList.filter(u => u.username !== username)]);
 
-    // 2. Write both per-user node and full collection snapshot to Firebase Realtime Database
+    // 2. Push ke node Firebase Realtime Database
     try {
-      set(ref(rtdb, `moccamana_users/${userId}`), newUser);
-      set(ref(rtdb, 'moccamana_users_list'), updatedList);
+      const usersRef = ref(rtdb, 'moccamana_users');
+      const newRef = push(usersRef);
+      set(newRef, { ...newUser, _fbKey: newRef.key });
     } catch (err) {
-      console.error('Firebase register error:', err);
+      console.error('Firebase register push error:', err);
     }
   };
 
@@ -557,16 +554,21 @@ export const TravelProvider = ({ children }) => {
 
     setUsersList(usersList.map(u => u.id === userId ? updatedUser : u));
     try {
-      set(ref(rtdb, `moccamana_users/${userId}`), updatedUser);
+      if (targetUser._fbKey) {
+        set(ref(rtdb, `moccamana_users/${targetUser._fbKey}/status`), 'approved');
+      }
     } catch (err) {
       console.error('Firebase approve error:', err);
     }
   };
 
   const rejectUser = (userId) => {
+    const targetUser = usersList.find(u => u.id === userId);
     setUsersList(usersList.filter(u => u.id !== userId));
     try {
-      set(ref(rtdb, `moccamana_users/${userId}`), null); // Hapus dari Firebase
+      if (targetUser && targetUser._fbKey) {
+        remove(ref(rtdb, `moccamana_users/${targetUser._fbKey}`));
+      }
     } catch (err) {
       console.error('Firebase reject error:', err);
     }
