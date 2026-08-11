@@ -543,18 +543,19 @@ export const TravelProvider = ({ children }) => {
   };
 
   const approveUser = (userId) => {
-    const targetUser = usersList.find(u => u.id === userId);
-    if (!targetUser) return;
-    const updatedUser = { ...targetUser, status: 'approved' };
-
-    setUsersList(usersList.map(u => u.id === userId ? updatedUser : u));
-    try {
-      if (targetUser._fbKey) {
-        set(ref(rtdb, `moccamana_users/${targetUser._fbKey}/status`), 'approved');
+    setUsersList(prevList => {
+      const updatedList = prevList.map(u => u.id === userId || u._fbKey === userId ? { ...u, status: 'approved' } : u);
+      const targetUser = updatedList.find(u => u.id === userId || u._fbKey === userId);
+      
+      if (targetUser && targetUser._fbKey) {
+        try {
+          set(ref(rtdb, `moccamana_users/${targetUser._fbKey}/status`), 'approved');
+        } catch (err) {
+          console.error('Firebase approve error:', err);
+        }
       }
-    } catch (err) {
-      console.error('Firebase approve error:', err);
-    }
+      return updatedList;
+    });
   };
 
   const rejectUser = (userId) => {

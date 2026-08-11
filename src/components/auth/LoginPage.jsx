@@ -31,8 +31,9 @@ export const LoginPage = () => {
         return;
       }
 
-      // 2. Cek user lain di usersList
-      const targetUser = usersList.find(u => u.username === form.username);
+      // 2. Cek user lain di usersList (Case-Insensitive)
+      const inputName = (form.username || '').trim().toLowerCase();
+      const targetUser = usersList.find(u => (u.username || '').trim().toLowerCase() === inputName);
       if (targetUser) {
         if (targetUser.status === 'pending') {
           setErrorMsg('Akun Anda masih menunggu persetujuan Admin untuk login!');
