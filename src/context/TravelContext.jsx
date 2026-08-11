@@ -548,7 +548,7 @@ export const TravelProvider = ({ children }) => {
     // 1. Update State Lokal
     setUsersList(prevList => [newUser, ...prevList.filter(u => u.username !== username)]);
 
-    // 2. Push ke node Firebase Realtime Database
+    // 2. Direct Push ke Firebase Realtime Database
     try {
       const usersRef = ref(rtdb, 'moccamana_users');
       const newRef = push(usersRef);
@@ -562,7 +562,7 @@ export const TravelProvider = ({ children }) => {
     setUsersList(prevList => {
       const updatedList = prevList.map(u => u.id === userId || u._fbKey === userId ? { ...u, status: 'approved' } : u);
       const targetUser = updatedList.find(u => u.id === userId || u._fbKey === userId);
-      
+
       if (targetUser && targetUser._fbKey) {
         try {
           set(ref(rtdb, `moccamana_users/${targetUser._fbKey}/status`), 'approved');
@@ -575,8 +575,9 @@ export const TravelProvider = ({ children }) => {
   };
 
   const rejectUser = (userId) => {
-    const targetUser = usersList.find(u => u.id === userId);
-    setUsersList(usersList.filter(u => u.id !== userId));
+    const targetUser = usersList.find(u => u.id === userId || u._fbKey === userId);
+    setUsersList(prevList => prevList.filter(u => u.id !== userId && u._fbKey !== userId));
+
     try {
       if (targetUser && targetUser._fbKey) {
         remove(ref(rtdb, `moccamana_users/${targetUser._fbKey}`));

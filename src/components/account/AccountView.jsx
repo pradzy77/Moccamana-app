@@ -263,7 +263,7 @@ export const AccountView = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5 uppercase tracking-wide">
                 <Cloud className="w-4 h-4 text-amber-400" />
-                3. Sinkronkan Data Cloud (Upstash KV)
+                3. Sinkronkan Data Cloud (Firebase Realtime)
               </h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Online
