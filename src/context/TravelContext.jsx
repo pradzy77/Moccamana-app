@@ -526,15 +526,37 @@ export const TravelProvider = ({ children }) => {
       status: 'pending',
       registeredAt: 'Baru saja'
     };
-    setUsersList(prev => [newUser, ...prev]);
+    
+    setUsersList(prevList => {
+      const updatedList = [newUser, ...prevList];
+      // Tulis langsung ke Firebase Realtime Database
+      try {
+        set(ref(rtdb, 'moccamana_users'), updatedList);
+      } catch (err) {
+        console.error('Firebase user sync error:', err);
+      }
+      return updatedList;
+    });
   };
 
   const approveUser = (userId) => {
-    setUsersList(usersList.map(u => u.id === userId ? { ...u, status: 'approved' } : u));
+    const updated = usersList.map(u => u.id === userId ? { ...u, status: 'approved' } : u);
+    setUsersList(updated);
+    try {
+      set(ref(rtdb, 'moccamana_users'), updated);
+    } catch (err) {
+      console.error('Firebase approve error:', err);
+    }
   };
 
   const rejectUser = (userId) => {
-    setUsersList(usersList.filter(u => u.id !== userId));
+    const updated = usersList.filter(u => u.id !== userId);
+    setUsersList(updated);
+    try {
+      set(ref(rtdb, 'moccamana_users'), updated);
+    } catch (err) {
+      console.error('Firebase reject error:', err);
+    }
   };
 
   const logoutUser = () => {
