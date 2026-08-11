@@ -82,7 +82,8 @@ export const TripList = () => {
   };
 
   const handleCopyShareLink = (code) => {
-    const link = `https://jelajah.app/trip/${code}`;
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://moccamana.vercel.app';
+    const link = `${baseUrl}?shareCode=${code}`;
     navigator.clipboard.writeText(link);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -571,7 +572,7 @@ export const TripList = () => {
                 <input
                   type="text"
                   readOnly
-                  value={`https://jelajah.app/trip/${sharingTrip.shareCode || 'TRIP-8472'}`}
+                  value={`${typeof window !== 'undefined' ? window.location.origin : 'https://moccamana.vercel.app'}?shareCode=${sharingTrip.shareCode || 'TRIP-8472'}`}
                   className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-cyan-300 font-mono"
                 />
                 <button
