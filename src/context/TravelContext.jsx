@@ -26,7 +26,8 @@ export const TravelProvider = ({ children }) => {
   const [usersList, setUsersList] = useState(() => {
     const saved = localStorage.getItem('moccamana_users_list');
     return saved ? JSON.parse(saved) : [
-      { id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' }
+      { id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' },
+      { id: 'u-2', username: 'carrjies', email: 'carrjies@moccamana.app', role: 'user', status: 'pending', registeredAt: 'Hari ini, 22:45 WIB' }
     ];
   });
 
@@ -537,11 +538,13 @@ export const TravelProvider = ({ children }) => {
     };
     
     // 1. Update State Lokal
-    setUsersList(prevList => [newUser, ...prevList]);
+    const updatedList = [newUser, ...usersList.filter(u => u.id !== userId)];
+    setUsersList(updatedList);
 
-    // 2. Direct write per-user node to Firebase Realtime Database
+    // 2. Write both per-user node and full collection snapshot to Firebase Realtime Database
     try {
       set(ref(rtdb, `moccamana_users/${userId}`), newUser);
+      set(ref(rtdb, 'moccamana_users_list'), updatedList);
     } catch (err) {
       console.error('Firebase register error:', err);
     }

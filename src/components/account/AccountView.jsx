@@ -6,7 +6,7 @@ export const AccountView = () => {
   const { user, loginUser, logoutUser, updateUser, settings, syncDataCloud, usersList, approveUser, rejectUser } = useTravel();
   const [isEditing, setIsEditing] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isUsersPanelOpen, setIsUsersPanelOpen] = useState(false);
+  const [isUsersPanelOpen, setIsUsersPanelOpen] = useState(true);
   const [userFilterTab, setUserFilterTab] = useState('Menunggu'); // 'Menunggu' | 'Disetujui'
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [editForm, setEditForm] = useState({
