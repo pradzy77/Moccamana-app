@@ -10,11 +10,8 @@ export const TravelProvider = ({ children }) => {
   const [selectedTripId, setSelectedTripId] = useState(null);
   const [tripViewMode, setTripViewMode] = useState('list'); // 'list' | 'detail'
 
-  // Trips State
-  const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem('jelajah_trips');
-    return saved ? JSON.parse(saved) : initialTrips;
-  });
+  // Trips State (Per-User Isolated)
+  const [trips, setTrips] = useState([]);
 
   // Spots State
   const [spots, setSpots] = useState(() => {
@@ -42,14 +39,27 @@ export const TravelProvider = ({ children }) => {
     return { ...loadedUser, role: 'admin', isLoggedIn: false }; // Paksa login page aktif saat start
   });
 
-  // Realtime Firebase Synchronization
+  // Realtime Firebase Synchronization (Per-User Scoped)
   useEffect(() => {
-    // 1. Sync Trips from Firebase
-    const tripsRef = ref(rtdb, 'moccamana_trips');
-    const unsubTrips = onValue(tripsRef, (snapshot) => {
+    const currentUsername = user?.name || 'ilprad';
+
+    // 1. Sync User-Specific Trips from Firebase
+    const userTripsRef = ref(rtdb, `moccamana_user_trips/${currentUsername}`);
+    const unsubTrips = onValue(userTripsRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
+      if (data && Array.isArray(data) && data.length > 0) {
         setTrips(data);
+      } else if (!data) {
+        // Jika user baru belum punya trip, berikan initial default trip terpisah
+        const defaultUserTrips = initialTrips.map(t => ({
+          ...t,
+          id: `${t.id}-${currentUsername}`,
+          owner: currentUsername
+        }));
+        setTrips(defaultUserTrips);
+        try {
+          set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), defaultUserTrips);
+        } catch (e) {}
       }
     });
 
@@ -65,7 +75,6 @@ export const TravelProvider = ({ children }) => {
           parsedList = data;
         }
         if (parsedList.length > 0) {
-          // Pastikan admin ilprad selalu ada
           const hasAdmin = parsedList.some(u => u.username === 'ilprad');
           if (!hasAdmin) {
             parsedList.unshift({ id: 'u-1', username: 'ilprad', email: 'ilprad@moccamana.app', role: 'admin', status: 'approved', registeredAt: '11 Agt 2026' });
@@ -89,17 +98,18 @@ export const TravelProvider = ({ children }) => {
       unsubUsers();
       unsubSpots();
     };
-  }, []);
+  }, [user?.name]);
 
-  // Write changes to Firebase & LocalStorage
+  // Write trips change to User-Scoped Firebase path & LocalStorage
   useEffect(() => {
-    localStorage.setItem('jelajah_trips', JSON.stringify(trips));
+    const currentUsername = user?.name || 'ilprad';
+    localStorage.setItem(`jelajah_trips_${currentUsername}`, JSON.stringify(trips));
     try {
-      set(ref(rtdb, 'moccamana_trips'), trips);
+      set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), trips);
     } catch (e) {
-      console.error('Firebase sync error:', e);
+      console.error('Firebase trip sync error:', e);
     }
-  }, [trips]);
+  }, [trips, user?.name]);
 
   useEffect(() => {
     localStorage.setItem('jelajah_spots', JSON.stringify(spots));
