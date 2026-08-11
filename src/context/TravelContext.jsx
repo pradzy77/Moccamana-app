@@ -528,6 +528,10 @@ export const TravelProvider = ({ children }) => {
 
   const loginUser = (email, name) => {
     const isIlprad = email.includes('ilprad') || name === 'ilprad';
+    // Clear trips state & selectedTripId before loading new user data
+    setTrips([]);
+    setSelectedTripId(null);
+
     setUser({
       name: name || 'ilprad',
       email: email || 'ilprad@moccamana.app',
@@ -595,6 +599,8 @@ export const TravelProvider = ({ children }) => {
   };
 
   const logoutUser = () => {
+    setTrips([]);
+    setSelectedTripId(null);
     setUser({ ...user, isLoggedIn: false });
   };
 
