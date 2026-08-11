@@ -39,16 +39,26 @@ export const TravelProvider = ({ children }) => {
     return { ...loadedUser, role: 'admin', isLoggedIn: false }; // Paksa login page aktif saat start
   });
 
-  // Realtime Firebase Synchronization (Per-User Scoped)
+  // Realtime Firebase Synchronization (Global Shared + Per-User Scoped)
   useEffect(() => {
     const currentUsername = user?.name || 'ilprad';
 
-    // 1. Sync User-Specific Trips & Shared Collaborated Trips from Firebase
+    // 1. Sync User-Specific Trips from Firebase
     const userTripsRef = ref(rtdb, `moccamana_user_trips/${currentUsername}`);
     const unsubTrips = onValue(userTripsRef, (snapshot) => {
       const data = snapshot.val();
       if (Array.isArray(data)) {
-        setTrips(data);
+        setTrips(prev => {
+          // Gabungkan user trips dengan shared trips yang sudah join
+          const sharedOnly = prev.filter(p => p.isShared);
+          const combined = [...data];
+          sharedOnly.forEach(st => {
+            if (!combined.some(c => c.id === st.id)) {
+              combined.push(st);
+            }
+          });
+          return combined;
+        });
       } else if (data === null) {
         const hasInitialized = localStorage.getItem(`jelajah_init_${currentUsername}`);
         if (!hasInitialized) {
@@ -68,27 +78,19 @@ export const TravelProvider = ({ children }) => {
       }
     });
 
-    // 1b. Listen to shared collaborated trips in Realtime
-    const allTripsRef = ref(rtdb, 'moccamana_user_trips');
-    const unsubAllTrips = onValue(allTripsRef, (snapshot) => {
-      const allData = snapshot.val();
-      if (allData && typeof allData === 'object') {
+    // 1b. Listen to ALL Shared Trips in Realtime (Realtime Wishlist/Activity sync)
+    const sharedTripsRef = ref(rtdb, 'moccamana_shared_trips');
+    const unsubSharedTrips = onValue(sharedTripsRef, (snapshot) => {
+      const sharedData = snapshot.val();
+      if (sharedData && typeof sharedData === 'object') {
         setTrips(prevTrips => {
-          let hasChanges = false;
-          const newTrips = prevTrips.map(localTrip => {
-            if (localTrip.owner && localTrip.owner !== currentUsername) {
-              const ownerTrips = allData[localTrip.owner];
-              if (Array.isArray(ownerTrips)) {
-                const liveTrip = ownerTrips.find(t => t.id === localTrip.id || t.shareCode === localTrip.shareCode);
-                if (liveTrip && JSON.stringify(liveTrip) !== JSON.stringify(localTrip)) {
-                  hasChanges = true;
-                  return liveTrip;
-                }
-              }
+          return prevTrips.map(localTrip => {
+            const liveShared = sharedData[localTrip.id] || sharedData[localTrip.shareCode];
+            if (liveShared) {
+              return { ...liveShared, isShared: true };
             }
             return localTrip;
           });
-          return hasChanges ? newTrips : prevTrips;
         });
       }
     });
@@ -136,25 +138,20 @@ export const TravelProvider = ({ children }) => {
     };
   }, [user?.name]);
 
-  // Write trips change to User-Scoped Firebase path & LocalStorage
+  // Write trips change to User-Scoped & Shared Firebase path
   useEffect(() => {
     const currentUsername = user?.name || 'ilprad';
-    localStorage.setItem(`jelajah_trips_${currentUsername}`, JSON.stringify(trips));
-    try {
-      set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), trips);
+    const userOwnedTrips = trips.filter(t => !t.isShared);
+    localStorage.setItem(`jelajah_trips_${currentUsername}`, JSON.stringify(userOwnedTrips));
 
-      // Jika ada shared trip yang diedit oleh collaborator, update juga di node owner asli secara Realtime
+    try {
+      set(ref(rtdb, `moccamana_user_trips/${currentUsername}`), userOwnedTrips);
+
+      // Push / Update setiap trip yang ada ke node global shared Firebase (moccamana_shared_trips)
       trips.forEach(t => {
-        if (t.owner && t.owner !== currentUsername) {
-          onValue(ref(rtdb, `moccamana_user_trips/${t.owner}`), (snapshot) => {
-            const ownerTrips = snapshot.val();
-            if (Array.isArray(ownerTrips)) {
-              const updatedOwnerTrips = ownerTrips.map(ot => (ot.id === t.id || ot.shareCode === t.shareCode) ? t : ot);
-              if (JSON.stringify(ownerTrips) !== JSON.stringify(updatedOwnerTrips)) {
-                set(ref(rtdb, `moccamana_user_trips/${t.owner}`), updatedOwnerTrips);
-              }
-            }
-          }, { onlyOnce: true });
+        set(ref(rtdb, `moccamana_shared_trips/${t.id}`), t);
+        if (t.shareCode) {
+          set(ref(rtdb, `moccamana_shared_trips/${t.shareCode}`), t);
         }
       });
     } catch (e) {
@@ -239,35 +236,47 @@ export const TravelProvider = ({ children }) => {
       return { success: true, message: `Berhasil membuka rencana: ${existingTrip.title}` };
     }
 
-    // 2. Jika tidak ada di local, cari di Firebase Realtime Database
+    // 2. Jika tidak ada di local, cari di node global moccamana_shared_trips atau moccamana_user_trips
     try {
-      const allTripsRef = ref(rtdb, 'moccamana_user_trips');
-      const snapshot = await new Promise((resolve) => {
-        onValue(allTripsRef, (snap) => resolve(snap), { onlyOnce: true });
+      // 2a. Cari di global shared node
+      const sharedSnap = await new Promise((resolve) => {
+        onValue(ref(rtdb, `moccamana_shared_trips/${cleanCode}`), (snap) => resolve(snap), { onlyOnce: true });
       });
+      let foundTrip = sharedSnap.val();
 
-      const allData = snapshot.val();
-      if (allData && typeof allData === 'object') {
-        let foundTrip = null;
-        for (const userKey in allData) {
-          const userTrips = allData[userKey];
-          if (Array.isArray(userTrips)) {
-            const match = userTrips.find(t => t.shareCode === cleanCode);
-            if (match) {
-              foundTrip = match;
-              break;
+      // 2b. Jika belum ada, cari di moccamana_user_trips
+      if (!foundTrip) {
+        const allTripsRef = ref(rtdb, 'moccamana_user_trips');
+        const snapshot = await new Promise((resolve) => {
+          onValue(allTripsRef, (snap) => resolve(snap), { onlyOnce: true });
+        });
+
+        const allData = snapshot.val();
+        if (allData && typeof allData === 'object') {
+          for (const userKey in allData) {
+            const userTrips = allData[userKey];
+            if (Array.isArray(userTrips)) {
+              const match = userTrips.find(t => t.shareCode === cleanCode);
+              if (match) {
+                foundTrip = match;
+                break;
+              }
             }
           }
         }
+      }
 
-        if (foundTrip) {
-          // Tambahkan ke daftar trip user aktif
-          const updatedTrips = [foundTrip, ...trips.filter(t => t.id !== foundTrip.id)];
-          setTrips(updatedTrips);
-          setSelectedTripId(foundTrip.id);
-          setTripViewMode('detail');
-          return { success: true, message: `Berhasil bergabung ke rencana: ${foundTrip.title}!` };
-        }
+      if (foundTrip) {
+        const sharedTripObj = { ...foundTrip, isShared: true };
+        // Tuliskan ke node shared global Firebase
+        set(ref(rtdb, `moccamana_shared_trips/${foundTrip.id}`), sharedTripObj);
+        set(ref(rtdb, `moccamana_shared_trips/${cleanCode}`), sharedTripObj);
+
+        // Tambahkan ke daftar trip user aktif
+        setTrips(prev => [sharedTripObj, ...prev.filter(t => t.id !== foundTrip.id)]);
+        setSelectedTripId(foundTrip.id);
+        setTripViewMode('detail');
+        return { success: true, message: `Berhasil bergabung ke rencana: ${foundTrip.title}!` };
       }
     } catch (err) {
       console.error('Error joining trip by code:', err);
