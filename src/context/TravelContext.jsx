@@ -120,8 +120,24 @@ export const TravelProvider = ({ children }) => {
   const [mascotBubble, setMascotBubble] = useState('');
   const [mascotEmotion, setMascotEmotion] = useState('😊');
 
-  // Frame Simulation Toggle
-  const [isMobileFrame, setIsMobileFrame] = useState(true);
+  // Frame Simulation Toggle (Auto-disable mockup frame on actual mobile devices)
+  const [isMobileFrame, setIsMobileFrame] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768; // Aktifkan frame jika di PC/Laptop, matikan di HP sungguhan
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsMobileFrame(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Sync to LocalStorage
   useEffect(() => {

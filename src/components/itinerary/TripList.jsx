@@ -411,9 +411,7 @@ export const TripList = () => {
       </div>
 
       {/* Modal 1: Create Trip Modal */}
-      {isCreateModalOpen && (
-        <CreateTripModal onClose={() => setIsCreateModalOpen(false)} />
-      )}
+      <CreateTripModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
 
       {/* Modal 2: Edit Trip Modal (Includes Hapus Rencana button) */}
       {editingTrip && (
