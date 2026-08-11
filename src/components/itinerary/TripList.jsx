@@ -3,19 +3,24 @@ import { useTravel } from '../../context/TravelContext';
 import {
   Plus, Calendar, MapPin, Search, Edit3, Share2, Map,
   Trash2, Copy, Check, X, ArrowRight, ExternalLink,
-  Lightbulb, ChevronDown, ChevronUp
+  Lightbulb, ChevronDown, ChevronUp, UserPlus
 } from 'lucide-react';
 import { CreateTripModal } from './CreateTripModal';
 import { travelTips } from '../../mockData/initialData';
 
 export const TripList = () => {
   const {
-    trips, setSelectedTripId, setTripViewMode, updateTrip, deleteTrip, setActiveTab
+    trips, setSelectedTripId, setTripViewMode, updateTrip, deleteTrip, setActiveTab, joinTripByCode
   } = useTravel();
 
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [joinMsg, setJoinMsg] = useState({ type: '', text: '' });
+  const [isJoining, setIsJoining] = useState(false);
+
   const [isTipsOpen, setIsTipsOpen] = useState(false);
   const [activeTipIdx, setActiveTipIdx] = useState(0);
   const [openGuideIdx, setOpenGuideIdx] = useState(null);

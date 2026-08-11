@@ -188,6 +188,56 @@ export const TravelProvider = ({ children }) => {
   const selectedTrip = selectedTripId ? (trips.find(t => t.id === selectedTripId) || null) : null;
 
   // Trip Actions
+  // Join Trip Action by Share Code
+  const joinTripByCode = async (code) => {
+    if (!code) return { success: false, message: 'Masukkan kode trip terlebih dahulu.' };
+    const cleanCode = code.trim().toUpperCase();
+
+    // 1. Cari trip di daftar trip pengguna saat ini
+    const existingTrip = trips.find(t => t.shareCode === cleanCode);
+    if (existingTrip) {
+      setSelectedTripId(existingTrip.id);
+      setTripViewMode('detail');
+      return { success: true, message: `Berhasil membuka rencana: ${existingTrip.title}` };
+    }
+
+    // 2. Jika tidak ada di local, cari di Firebase Realtime Database
+    try {
+      const allTripsRef = ref(rtdb, 'moccamana_user_trips');
+      const snapshot = await new Promise((resolve) => {
+        onValue(allTripsRef, (snap) => resolve(snap), { onlyOnce: true });
+      });
+
+      const allData = snapshot.val();
+      if (allData && typeof allData === 'object') {
+        let foundTrip = null;
+        for (const userKey in allData) {
+          const userTrips = allData[userKey];
+          if (Array.isArray(userTrips)) {
+            const match = userTrips.find(t => t.shareCode === cleanCode);
+            if (match) {
+              foundTrip = match;
+              break;
+            }
+          }
+        }
+
+        if (foundTrip) {
+          // Tambahkan ke daftar trip user aktif
+          const updatedTrips = [foundTrip, ...trips.filter(t => t.id !== foundTrip.id)];
+          setTrips(updatedTrips);
+          setSelectedTripId(foundTrip.id);
+          setTripViewMode('detail');
+          return { success: true, message: `Berhasil bergabung ke rencana: ${foundTrip.title}!` };
+        }
+      }
+    } catch (err) {
+      console.error('Error joining trip by code:', err);
+    }
+
+    return { success: false, message: 'Kode trip tidak ditemukan atau tidak valid.' };
+  };
+
   const addTrip = (newTripData) => {
     const newTrip = {
       id: `trip-${Date.now()}`,
@@ -662,6 +712,7 @@ export const TravelProvider = ({ children }) => {
       setTripViewMode,
       trips,
       addTrip,
+      joinTripByCode,
       updateTrip,
       updateTripWeather,
       deleteTrip,

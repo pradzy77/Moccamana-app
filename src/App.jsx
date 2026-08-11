@@ -41,8 +41,24 @@ const NoTripSelectedPrompt = () => {
 };
 
 const MainContent = () => {
-  const { activeTab, tripViewMode, settings, user, selectedTrip } = useTravel();
+  const { activeTab, tripViewMode, settings, user, selectedTrip, joinTripByCode } = useTravel();
   const isDark = settings.appearance.darkMode;
+
+  // Auto join trip via link URL parameter (?shareCode=...)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.isLoggedIn) {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('shareCode');
+      if (code) {
+        joinTripByCode(code).then((res) => {
+          if (res.success) {
+            // Hapus parameter URL agar bersih setelah auto-join
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        });
+      }
+    }
+  }, [user?.isLoggedIn]);
 
   // Apply dark-mode class to <body> so CSS global overrides work
   useEffect(() => {
